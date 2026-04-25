@@ -55,7 +55,7 @@ async function startBot() {
             qrcode.generate(qr, { small: true }); 
         }
 
-        if (connection === 'open') console.log('✅ JAVAGOAT AI IS ONLINE!');
+        if (connection === 'open') console.log('✅ Emicyber AI IS ONLINE!');
         if (connection === 'close') {
             const reason = lastDisconnect?.error?.output?.statusCode;
             if (reason !== DisconnectReason.loggedOut) startBot();
@@ -75,17 +75,17 @@ async function startBot() {
         console.log(`📩 Query: ${text}`);
 
         // --- 🛒 STEP 2: FINISH ORDER & SEND TO ADMIN PANEL ---
-        if (orderStates[sender]?.step === 'WAITING_FOR_ADDRESS') {
+        if (orderStates[sender]?.step === 'WAITING_FOR_PAYMENT') {
             const customerDetails = text; // This now contains Name, Phone, and Address
             const item = orderStates[sender].item;
             const customerWaNumber = sender.split('@')[0];
 
-            // Match the exact format of your JavaGoat Admin Panel
-            const javaGoatOrder = {
+            // Match the exact format of your Emicyber Admin Panel
+            const EmicyberOrder = {
                 userId: "whatsapp_" + customerWaNumber,
-                userEmail: "whatsapp@javagoat.com",
+                userEmail: "emicyber20@gmail.com",
                 phone: customerWaNumber, // Keeps their WA number registered
-                address: customerDetails, // Saves Name, Phone, and Address typed by them
+                address: customerDetails, // Saves Name, Phone, and Email typed by them
                 location: { lat: 0, lng: 0 },
                 items:[{
                     id: item.id,
@@ -96,7 +96,7 @@ async function startBot() {
                 }],
                 total: (parseFloat(item.price) + 50).toFixed(2), // Price + 50 Delivery Fee
                 status: "Placed",
-                method: "Cash on Delivery (WhatsApp)",
+                method: "Payment on Completion (WhatsApp)",
                 timestamp: new Date().toISOString()
             };
 
@@ -111,7 +111,7 @@ async function startBot() {
                 console.log("Firebase Error: ", error);
             }
 
-            await sock.sendMessage(sender, { text: `✅ *Order Placed Successfully!* \n\nThank you! Your order for *${item.name}* is being prepared. \n\n*Total:* ₹${javaGoatOrder.total} (Inc. Delivery)\n*Status:* Preparing\n\nWe will deliver it to your address soon.` });
+            await sock.sendMessage(sender, { text: `✅ *Order Placed Successfully!* \n\nThank you! Your order for *${item.name}* is being processed. \n\n*Total:* ₹${Emicyber.total} (Inc. Delivery)\n*Status:* Processing\n\nWill be delivered to you soon.` });
             delete orderStates[sender]; 
             return;
         }
@@ -125,14 +125,14 @@ async function startBot() {
             const matchedItem = currentMenu.find(item => item.name.toLowerCase().includes(productRequested));
 
             if (!matchedItem) {
-                await sock.sendMessage(sender, { text: `❌ Sorry, we couldn't find *${productRequested}* in our menu today.\n\nType *menu* to see all available items.` });
+                await sock.sendMessage(sender, { text: `❌ Sorry, we couldn't find *${productRequested}* in our menu today.\n\nType *menu* to see all available services.` });
                 return;
             }
 
-            orderStates[sender] = { step: 'WAITING_FOR_ADDRESS', item: matchedItem };
+            orderStates[sender] = { step: 'WAITING_FOR_PAYMENT', item: matchedItem };
             
             // 🌟 NEW: SEND PRODUCT IMAGE + ASK FOR PHONE NUMBER 🌟
-            const captionText = `🛒 *Order Started!* \n\nYou selected: *${matchedItem.name}* (₹${matchedItem.price})\n\nPlease reply with your *Full Name, Phone Number, and Delivery Address*.`;
+            const captionText = `🛒 *Order Started!* \n\nYou selected: *${matchedItem.name}* (₹${matchedItem.price})\n\nPlease reply with your *Full Name, Phone Number, and Email*.`;
             
             // If the product has an image URL in Firebase, send it as a WhatsApp Photo
             if (matchedItem.imageUrl) {
@@ -146,36 +146,36 @@ async function startBot() {
             }
         }
         else if (text === "order") { 
-            await sock.sendMessage(sender, { text: "🛒 *How to order:* \nPlease type 'order' followed by the dish name. \nExample: *order pizza*" });
+            await sock.sendMessage(sender, { text: "🛒 *How to order:* \nPlease type 'order' followed by the service name. \nExample: *order Web development*" });
         }
         
         // --- DYNAMIC MENU FEATURE ---
-        else if (text.includes("menu") || text.includes("price") || text.includes("list") || text.includes("food")) {
+        else if (text.includes("menu") || text.includes("price") || text.includes("list") || text.includes("Service")) {
             const currentMenu = await getMenuFromApp();
             
             if (currentMenu.length === 0) {
-                await sock.sendMessage(sender, { text: "Our menu is currently empty or updating. Please check back soon!" });
+                await sock.sendMessage(sender, { text: "Our menu is currently updating. Please check back soon!" });
                 return;
             }
 
-            let menuMessage = "🍔 *JAVAGOAT LIVE MENU* 🍕\n\n";
+            let menuMessage = " *Emicyber LIVE MENU* \n\n";
             currentMenu.forEach(item => {
-                menuMessage += `🔸 *${item.name}* - ₹${item.price}\n`;
+                menuMessage += `🔸 *${item.name}* - ₦${item.price}\n`;
             });
-            menuMessage += "\n_To order, reply with 'order [dish name]'_";
+            menuMessage += "\n_To order, reply with 'order [item name]'_";
             
             await sock.sendMessage(sender, { text: menuMessage });
         }
 
         // --- GREETINGS ---
         else if (text.includes("hi") || text.includes("hello") || text.includes("hey")) {
-            await sock.sendMessage(sender, { text: "👋 *Welcome to JavaGoat!* \n\nI am your AI Assistant. Type *menu* to see our delicious food, or type *order [dish]* to buy instantly!" });
+            await sock.sendMessage(sender, { text: "👋 *Welcome to Emicyber!* \n\nI am your AI Assistant. Type *menu* to see our IT services, or type *order [service]* to pay instantly!" });
         }
         else if (text.includes("contact") || text.includes("call")) {
-            await sock.sendMessage(sender, { text: "📞 *Contact JavaGoat:* \n\n- *Email:* support@javagoat.com" });
+            await sock.sendMessage(sender, { text: "📞 *Contact Emicyber:* \n\n- *Email:* emicyber20@gmail.com" });
         }
         else {
-            await sock.sendMessage(sender, { text: "🤔 I didn't quite catch that.\n\nType *menu* to see our food list, or *order [food]* to place an order!" });
+            await sock.sendMessage(sender, { text: "🤔 I didn't quite catch that.\n\nType *menu* to see our service list, or *order [service]* to place an order!" });
         }
     });
 }
